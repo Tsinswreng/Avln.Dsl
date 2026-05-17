@@ -6,7 +6,7 @@ using Avalonia.Data.Converters;
 using Avalonia.Data.Core;
 using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings;
-namespace Tsinswreng.AvlnDsl;
+namespace Tsinswreng.Avln.Dsl;
 
 
 //于c#中用編譯期綁定

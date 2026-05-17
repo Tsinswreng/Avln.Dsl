@@ -1,7 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 
-namespace Tsinswreng.AvlnDsl;
+namespace Tsinswreng.Avln.Dsl;
 using TSelf = ItemsControl;
 public static class ExtnItemsControl{
 	extension(TSelf z)

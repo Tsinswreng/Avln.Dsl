@@ -13,7 +13,7 @@ using Avalonia.Styling;
 //using Tsinswreng.AvlnTools.Tools;
 using Tsinswreng.CsCore;
 
-namespace Tsinswreng.AvlnDsl;
+namespace Tsinswreng.Avln.Dsl;
 using Controls = global::Avalonia.Controls.Controls;
 using NonGenericList = System.Collections.IList;
 public static class Extn{

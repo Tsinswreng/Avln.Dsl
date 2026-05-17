@@ -1,4 +1,4 @@
-namespace Tsinswreng.AvlnDsl;
+namespace Tsinswreng.Avln.Dsl;
 
 using System;
 using System.Globalization;

@@ -4,7 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings;
-namespace Tsinswreng.AvlnDsl;
+namespace Tsinswreng.Avln.Dsl;
 public partial interface IViewModel{}
 
 public static class ExtnIViewModel{
