@@ -11,7 +11,9 @@ using Avalonia.Data.Converters;
 public partial class FnConvtr<TIn, TRet>
 	:IValConvtrWithErr
 {
+	//第二個object?是Parameter
 	public Func<TIn, object?, TRet>? FnConv{get;set;}
+	//第二個object?是Parameter
 	public Func<TRet, object?, TIn>? FnBack{get;set;}
 	public Func<Exception, obj?>? OnErr{get;set;} = e => {
 		Console.Error.WriteLine(e); return null;
@@ -26,6 +28,16 @@ public partial class FnConvtr<TIn, TRet>
 	){
 		this.FnConv = FnConv;
 		this.FnBack = FnBack;
+	}
+	
+	public FnConvtr(
+		Func<TIn, TRet> FnConv
+		,Func<TRet, TIn>? FnBack = null
+	){
+		this.FnConv = (a,b)=>FnConv(a);
+		if(FnBack is not null){
+			this.FnBack = (a,b)=>FnBack(a);
+		}
 	}
 
 	public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) {
