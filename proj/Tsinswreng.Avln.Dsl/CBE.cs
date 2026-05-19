@@ -1,6 +1,7 @@
 //2025-03-09T21:11:06.192+08:00_W10-7
 using System;
 using System.Linq.Expressions;
+using System.Reflection;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Data.Core;
@@ -111,13 +112,39 @@ public ClrPropertyInfo(
 	,Type propertyType
 )
 """;
-		var clrProp = new ClrPropertyInfo(
-			propName,
-			obj => ((TArg)obj).GetType().GetProperty(propName)?.GetValue(obj),
-			(obj, val) => ((TArg)obj).GetType().GetProperty(propName)?.SetValue(obj, val),
-			propType
-		);
 
-		builder.Property(clrProp, PropertyInfoAccessorFactory.CreateInpcPropertyAccessor);
+		if (expr.Member is PropertyInfo propInfo){
+			var clrProp = new ClrPropertyInfo(
+				propInfo.Name,
+				obj => {
+					return propInfo.GetValue(obj);
+				},
+				(obj, val) => propInfo.SetValue(obj, val),
+				propInfo.PropertyType
+			);
+			builder.Property(clrProp, PropertyInfoAccessorFactory.CreateInpcPropertyAccessor);
+		}
+		_ = """
+propInfo 对象本身是从表达式树中的 MemberExpression.Member 
+直接拿到的 PropertyInfo 实例。
+AOT 编译器会看到你的代码中
+直接引用了这个 PropertyInfo（例如赋给了 clrProp 变量），
+因此会保留该属性的所有元数据和访问器方法，
+确保 GetValue/SetValue 调用时不会因为剪裁而丢失。
+
+相比之下，原来的 GetProperty(propName) 是字符串反射，
+AOT 编译器无法知道 propName 具体指哪个属性，
+所以会报警告 IL2075
+
+舊寫法:
+var clrProp = new ClrPropertyInfo(
+	propName,
+	obj => ((TArg)obj).GetType().GetProperty(propName)?.GetValue(obj),
+	(obj, val) => ((TArg)obj).GetType().GetProperty(propName)?.SetValue(obj, val),
+	propType
+);
+
+
+""";
 	}
 }

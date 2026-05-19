@@ -269,6 +269,23 @@ public static class Extn{
 		// }
 	}
 	
+	extension<TSelf>(TSelf z)
+		where TSelf : Grid
+	{
+		public TSelf SetRowDefs(
+			params IEnumerable<RowDefinition> RowDefs
+		){
+			z.RowDefinitions = [..RowDefs];
+			return z;
+		}
+
+		public TSelf SetColDefs(
+			params IEnumerable<ColumnDefinition> ColDefs
+		){
+			z.ColumnDefinitions= [..ColDefs];
+			return z;
+		}
+	}
 
 }
 
