@@ -6,6 +6,7 @@ using Avalonia.Data.Converters;
 using Avalonia.Data.Core;
 using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings;
+using Tsinswreng.CsCore;
 namespace Tsinswreng.Avln.Dsl;
 
 
@@ -47,25 +48,34 @@ public partial class CBE : CompiledBindingExtension{
 		return r;
 	}
 
-// 從表達式樹構建編譯綁定路徑，支持屬性訪問（如 x=>x.Property）和直接對象綁定（如 x=>x）
-// 泛型參數 T 表示數據上下文類型，Tar 表示表達式返回值類型
-public static CompiledBindingPath Pth<T, Tar>(
-		Expression<Func<T, Tar>> propertySelector
+
+[Doc(@$"
+從表達式樹構建編譯綁定路徑，
+支持屬性訪問（如 x=>x.Property）
+和直接對象綁定（如 x=>x）
+- {nameof(TArg)} 表示數據上下文類型
+- {nameof(TRtn)} 表示表達式返回值類型
+")]
+public static CompiledBindingPath Pth<TArg, TRtn>(
+		Expression<Func<TArg, TRtn>> propertySelector
 	){
 		var builder = new CompiledBindingPathBuilder();
 		var body = propertySelector.Body;
 
 		// 處理類型轉換表達式（如值類型裝箱）
+		// 如 CBE.Pth<MyDataContext, object?>(ctx => ctx.SomeIntProperty)
+		// 编译器生成的表达式树实际上类似于：
+		// Convert( MemberExpression(ctx.SomeIntProperty) )
 		if (body is UnaryExpression { NodeType: ExpressionType.Convert } unaryExpr){
 			body = unaryExpr.Operand;
 		}
 
 		switch (body){
-			case MemberExpression memberExpr:  // 屬性訪問模式
-				ProcessMemberExpression<T>(builder, memberExpr);
+			case MemberExpression memberExpr:  // 屬性訪問模式 x=>x.Prop
+				ProcessMemberExpression<TArg>(builder, memberExpr);
 				break;
-			case ParameterExpression paramExpr:  // 直接對象綁定模式
-				ValidateObjectBinding(typeof(T), typeof(Tar));
+			case ParameterExpression paramExpr:  // 直接對象綁定模式 x=>x
+				ValidateObjectBinding(typeof(TArg), typeof(TRtn));
 				break;
 			default:
 				throw new ArgumentException("The expression must be a property access or object binding.");
@@ -85,20 +95,29 @@ private static void ValidateObjectBinding(Type sourceType, Type targetType){
 
 // 處理成員表達式（屬性訪問），將屬性添加到編譯綁定路徑構建器中
 // 使用反射建立 ClrPropertyInfo 並添加到路徑
-private static void ProcessMemberExpression<T>(
-	CompiledBindingPathBuilder builder
-	,MemberExpression expr
-){
-	var propName = expr.Member.Name;
-	var propType = expr.Type;
+	private static void ProcessMemberExpression<TArg>(
+		CompiledBindingPathBuilder builder
+		,MemberExpression expr // expr：表达式树中代表属性访问的节点，例如 ctx => ctx.UserName 中的 ctx.UserName。
+	){
+		var propName = expr.Member.Name;
+		var propType = expr.Type;
 
-	var clrProp = new ClrPropertyInfo(
-		propName,
-		obj => ((T)obj).GetType().GetProperty(propName)?.GetValue(obj),
-		(obj, val) => ((T)obj).GetType().GetProperty(propName)?.SetValue(obj, val),
-		propType
-	);
+		//ClrPropertyInfo是Avalonia的API、非 .NET 标准库中的通用类型。
+		_ = """
+public ClrPropertyInfo(
+	string name
+	,Func<object, object?>? getter
+	,Action<object, object?>? setter
+	,Type propertyType
+)
+""";
+		var clrProp = new ClrPropertyInfo(
+			propName,
+			obj => ((TArg)obj).GetType().GetProperty(propName)?.GetValue(obj),
+			(obj, val) => ((TArg)obj).GetType().GetProperty(propName)?.SetValue(obj, val),
+			propType
+		);
 
-	builder.Property(clrProp, PropertyInfoAccessorFactory.CreateInpcPropertyAccessor);
-}
+		builder.Property(clrProp, PropertyInfoAccessorFactory.CreateInpcPropertyAccessor);
+	}
 }
