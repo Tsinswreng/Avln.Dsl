@@ -17,13 +17,6 @@ namespace Tsinswreng.Avln.Dsl;
 using Controls = global::Avalonia.Controls.Controls;
 using NonGenericList = System.Collections.IList;
 public static class Extn{
-	public static RowDefinition RowDef(double value, GridUnitType type){
-		return new RowDefinition(value, type);
-	}
-	public static ColumnDefinition ColDef(double value, GridUnitType type){
-		return new ColumnDefinition(value, type);
-	}
-
 	extension<T>(ref T z)
 		where T:struct
 	{

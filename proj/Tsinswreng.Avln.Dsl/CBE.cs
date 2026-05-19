@@ -15,7 +15,6 @@ namespace Tsinswreng.Avln.Dsl;
 //,new Binding(nameof(ctx.hasValue)) 改成
 //,CBE.Mk<Ctx>(x=>x.hasValue)
 //RelativeBinging直用new Binging即可 不必用此
-
 public partial class CBE : CompiledBindingExtension{
 	public CBE(CompiledBindingPath path):base(path){}
 
@@ -48,22 +47,24 @@ public partial class CBE : CompiledBindingExtension{
 		return r;
 	}
 
-	public static CompiledBindingPath Pth<T, Tar>(
+// 從表達式樹構建編譯綁定路徑，支持屬性訪問（如 x=>x.Property）和直接對象綁定（如 x=>x）
+// 泛型參數 T 表示數據上下文類型，Tar 表示表達式返回值類型
+public static CompiledBindingPath Pth<T, Tar>(
 		Expression<Func<T, Tar>> propertySelector
 	){
 		var builder = new CompiledBindingPathBuilder();
 		var body = propertySelector.Body;
 
-		// 处理类型转换表达式（如值类型装箱）
+		// 處理類型轉換表達式（如值類型裝箱）
 		if (body is UnaryExpression { NodeType: ExpressionType.Convert } unaryExpr){
 			body = unaryExpr.Operand;
 		}
 
 		switch (body){
-			case MemberExpression memberExpr:  // 属性访问模式
+			case MemberExpression memberExpr:  // 屬性訪問模式
 				ProcessMemberExpression<T>(builder, memberExpr);
 				break;
-			case ParameterExpression paramExpr:  // 直接对象绑定模式
+			case ParameterExpression paramExpr:  // 直接對象綁定模式
 				ValidateObjectBinding(typeof(T), typeof(Tar));
 				break;
 			default:
@@ -73,27 +74,31 @@ public partial class CBE : CompiledBindingExtension{
 		return builder.Build();
 	}
 
-	private static void ValidateObjectBinding(Type sourceType, Type targetType){
-		if (!targetType.IsAssignableFrom(sourceType)){
-			//throw new InvalidOperationException($"类型不兼容：{sourceType}无法转换为{targetType}");
-			throw new InvalidOperationException($"Type mismatch: {sourceType} cannot be assigned to {targetType}");
-		}
+// 驗證來源類型是否可賦值給目標類型
+// 用於直接對象綁定時的類型相容性檢查
+private static void ValidateObjectBinding(Type sourceType, Type targetType){
+	if (!targetType.IsAssignableFrom(sourceType)){
+		//throw new InvalidOperationException($"类型不兼容：{sourceType}无法转换为{targetType}");
+		throw new InvalidOperationException($"Type mismatch: {sourceType} cannot be assigned to {targetType}");
 	}
+}
 
-	private static void ProcessMemberExpression<T>(
-		CompiledBindingPathBuilder builder
-		,MemberExpression expr
-	){
-		var propName = expr.Member.Name;
-		var propType = expr.Type;
+// 處理成員表達式（屬性訪問），將屬性添加到編譯綁定路徑構建器中
+// 使用反射建立 ClrPropertyInfo 並添加到路徑
+private static void ProcessMemberExpression<T>(
+	CompiledBindingPathBuilder builder
+	,MemberExpression expr
+){
+	var propName = expr.Member.Name;
+	var propType = expr.Type;
 
-		var clrProp = new ClrPropertyInfo(
-			propName,
-			obj => ((T)obj).GetType().GetProperty(propName)?.GetValue(obj),
-			(obj, val) => ((T)obj).GetType().GetProperty(propName)?.SetValue(obj, val),
-			propType
-		);
+	var clrProp = new ClrPropertyInfo(
+		propName,
+		obj => ((T)obj).GetType().GetProperty(propName)?.GetValue(obj),
+		(obj, val) => ((T)obj).GetType().GetProperty(propName)?.SetValue(obj, val),
+		propType
+	);
 
-		builder.Property(clrProp, PropertyInfoAccessorFactory.CreateInpcPropertyAccessor);
-	}
+	builder.Property(clrProp, PropertyInfoAccessorFactory.CreateInpcPropertyAccessor);
+}
 }
