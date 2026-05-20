@@ -43,8 +43,22 @@ public static class Extn{
 			throw new ArgumentException("PropertySelector must be a property selector expression.");
 		}
 		var StaticName = p.Name+"Property";
-		var AvlnPropField = typeof(T).GetField(StaticName, BindingFlags.Public | BindingFlags.Static);
-		return (AvaloniaProperty)AvlnPropField.GetValue(null);
+		FieldInfo? AvlnPropField = null;
+		for(var CurType = typeof(T); CurType is not null; CurType = CurType.BaseType){
+			AvlnPropField = CurType.GetField(
+				StaticName,
+				BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy
+			);
+			if(AvlnPropField is not null){
+				break;
+			}
+		}
+		if(AvlnPropField is null){
+			throw new InvalidOperationException(
+				$"Avalonia property field '{StaticName}' was not found on type '{typeof(T)}' or its base types."
+			);
+		}
+		return (AvaloniaProperty)AvlnPropField.GetValue(null)!;
 	}
 	
 	public static BindingExpressionBase CBind<TTar>
