@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Reflection;
 using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
@@ -25,6 +27,26 @@ public static class Extn{
 		}
 	}
 	
+	[Doc(@$"
+	var t = new TextBlock();
+	t.Prop(x=>x.Text) -> TextBlock.TextProperty
+	")]
+	public static AvaloniaProperty Prop<
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] T
+	>(
+		this T z, Expression<Func<T, object?>> PropertySelector
+	)where T:AvaloniaObject
+	{
+		if(PropertySelector.Body is not MemberExpression m
+			|| m.Member is not PropertyInfo p
+		){
+			throw new ArgumentException("PropertySelector must be a property selector expression.");
+		}
+		var StaticName = p.Name+"Property";
+		var AvlnPropField = typeof(T).GetField(StaticName, BindingFlags.Public | BindingFlags.Static);
+		return (AvaloniaProperty)AvlnPropField.GetValue(null);
+	}
+	
 	public static BindingExpressionBase CBind<TTar>
 	(
 		this AvaloniaObject z, AvaloniaProperty AvlnProp
@@ -42,7 +64,7 @@ public static class Extn{
 			TargetPropSlctr, Mode, Converter, ConverterParameter, Path, Source, DataType
 		));
 	}
-
+	
 	//下ʹ方法 須 手動傳兩泛型參數、不便也
 	// public static BindingExpressionBase CBind<TCtrl, TTar>
 	// (

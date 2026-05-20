@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Avalonia;
 using Avalonia.Controls;
@@ -12,7 +13,7 @@ public static class ExtnIViewModel{
 		//where TSelf : IViewModel
 	{
 		public BindingExpressionBase Bind(
-			Control C
+			AvaloniaObject C
 			,AvaloniaProperty AvlnProp
 			,Expression<Func<TSelf, object?>> TargetPropSlctr
 			//do not rename the following param
@@ -26,6 +27,29 @@ public static class ExtnIViewModel{
 		){
 			return C.CBind(
 				AvlnProp, TargetPropSlctr, Mode, Converter, ConverterParameter, Path, Source, DataType
+			);
+		}
+		
+		public BindingExpressionBase Bind<
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+			TCtrl
+		>(
+			TCtrl C
+			,Expression<Func<TCtrl, object?>> AvlnPropSlctr
+			,Expression<Func<TSelf, object?>> TargetPropSlctr
+			//do not rename the following param
+			//keep them the same as the prop of Binding
+			,BindingMode Mode = default
+			,IValueConverter? Converter = default
+			,object? ConverterParameter = default
+			,CompiledBindingPath? Path = default
+			,object? Source = default
+			,Type? DataType = default
+		)where TCtrl:AvaloniaObject
+		{
+			var Prop = Extn.Prop(C, AvlnPropSlctr);
+			return C.CBind(
+				Prop, TargetPropSlctr, Mode, Converter, ConverterParameter, Path, Source, DataType
 			);
 		}
 	}
