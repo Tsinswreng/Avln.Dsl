@@ -9,7 +9,6 @@ using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Layout;
-using Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings;
 using Avalonia.Styling;
 
 //using Tsinswreng.AvlnTools.Tools;
@@ -307,7 +306,7 @@ public static class Extn{
 			set{value(z);}
 		}
 
-		public (AvaloniaProperty property, IBinding binding) Binding{
+		public (AvaloniaProperty property, BindingBase binding) Binding{
 			set{
 				z.Bind(value.property,value.binding);
 			}

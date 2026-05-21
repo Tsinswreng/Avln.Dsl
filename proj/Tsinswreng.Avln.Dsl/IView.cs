@@ -3,7 +3,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
-using Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings;
 namespace Tsinswreng.Avln.Dsl;
 
 public interface IView<TCtx>{

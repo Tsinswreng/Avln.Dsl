@@ -5,7 +5,6 @@ using System.Reflection;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Data.Core;
-using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings;
 using Tsinswreng.CsCore;
 namespace Tsinswreng.Avln.Dsl;
@@ -17,7 +16,7 @@ namespace Tsinswreng.Avln.Dsl;
 //,new Binding(nameof(ctx.hasValue)) 改成
 //,CBE.Mk<Ctx>(x=>x.hasValue)
 //RelativeBinging直用new Binging即可 不必用此
-public partial class CBE : CompiledBindingExtension{
+public partial class CBE : CompiledBinding{
 	public CBE(CompiledBindingPath path):base(path){}
 
 	public static CompiledBindingPath Pth<T>(
@@ -28,7 +27,7 @@ public partial class CBE : CompiledBindingExtension{
 
 
 /// 除首個參數外 禁止依賴參數定義順序㕥傳參 須用命名參數 如 Mk<Ctx>(x=>x.Foo, Mode:BindingMode.TwoWay ...)
-	public static CompiledBindingExtension Mk<T>(
+	public static CBE Mk<T>(
 		Expression<Func<T, object?>> PropertySelector
 		//do not rename the following param
 		//keep them the same as the prop of Binding
@@ -43,7 +42,6 @@ public partial class CBE : CompiledBindingExtension{
 		r.Mode = Mode;
 		r.Converter = Converter;
 		r.ConverterParameter = ConverterParameter;
-		r.DataType = DataType;
 		if(Path is not null){r.Path = Path;}
 		if(Source is not null ){r.Source = Source;}
 		return r;
