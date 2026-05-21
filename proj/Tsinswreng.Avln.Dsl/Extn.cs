@@ -37,7 +37,8 @@ public static class Extn{
 		this T z, Expression<Func<T, object?>> PropertySelector
 	)where T:AvaloniaObject
 	{
-		if(PropertySelector.Body is not MemberExpression m
+		var Expr = UnwrapPropertySelector(PropertySelector.Body);
+		if(Expr is not MemberExpression m
 			|| m.Member is not PropertyInfo p
 		){
 			throw new ArgumentException("PropertySelector must be a property selector expression.");
@@ -59,6 +60,21 @@ public static class Extn{
 			);
 		}
 		return (AvaloniaProperty)AvlnPropField.GetValue(null)!;
+	}
+
+	/// `Expression<Func<T, object?>>` 在值類型/可空值類型屬性上常帶一層裝箱轉換。
+	/// 這裏先剝掉外層轉換，再按成員訪問解析 AvaloniaProperty。
+	static Expression UnwrapPropertySelector(Expression Expr){
+		while(Expr is UnaryExpression u
+			&& (
+				u.NodeType == ExpressionType.Convert
+				|| u.NodeType == ExpressionType.ConvertChecked
+				|| u.NodeType == ExpressionType.TypeAs
+			)
+		){
+			Expr = u.Operand;
+		}
+		return Expr;
 	}
 	
 	public static BindingExpressionBase CBind<TTar>
