@@ -6,7 +6,7 @@ using Tsinswreng.CsTreeTest;
 namespace Tsinswreng.Avln.Dsl.Test.ExtnTests;
 
 public partial class TestExtn{
-	/// 測試 CBind、控制擴展屬性 Init/Bind，以及 Grid.SetRowDefs/SetColDefs。
+	/// 測試 CBind、控制擴展屬性 Init/Binding，以及 Grid.SetRowDefs/SetColDefs。
 	public void RegisterBindingAndGrid(ITestNode Node){
 		var register = Node.MkTestFnRegister(
 			typeof(TestExtn),
@@ -45,10 +45,10 @@ public partial class TestExtn{
 			return null;
 		});
 
-		R("ControlBind_PropertySetterBindsValue", async(o)=>{
+		R("ControlBinding_PropertySetterBindsValue", async(o)=>{
 			var vm = new SampleVm{Name = "binder"};
 			var tb = new TextBlock();
-			tb.Bind = (
+			tb.Binding = (
 				TextBlock.TextProperty,
 				global::Tsinswreng.Avln.Dsl.CBE.Mk<SampleVm>(x=>x.Name, Source: vm)
 			);

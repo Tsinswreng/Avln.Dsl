@@ -307,7 +307,7 @@ public static class Extn{
 			set{value(z);}
 		}
 
-		public (AvaloniaProperty property, IBinding binding) Bind{
+		public (AvaloniaProperty property, IBinding binding) Binding{
 			set{
 				z.Bind(value.property,value.binding);
 			}

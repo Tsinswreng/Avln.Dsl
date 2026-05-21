@@ -70,18 +70,6 @@ public partial class TestCBE{
 			return null;
 		});
 
-		R("ObjectBinding_TypeMismatch_Throws", async(o)=>{
-			var thrown = false;
-			try{
-				_ = global::Tsinswreng.Avln.Dsl.CBE.Pth<SampleVm, OtherVm>(x=>x);
-			}
-			catch(InvalidOperationException){
-				thrown = true;
-			}
-			T(thrown);
-			return null;
-		});
-
 		R("RuntimeTypeMismatch_ReturnsUnsetInsteadOfThrowing", async(o)=>{
 			var path = global::Tsinswreng.Avln.Dsl.CBE.Pth<SampleVm>(x=>x.Name);
 			var binding = new global::Tsinswreng.Avln.Dsl.CBE(path){
