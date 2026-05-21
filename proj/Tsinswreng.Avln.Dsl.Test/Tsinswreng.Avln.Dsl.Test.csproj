@@ -9,4 +9,7 @@
 	<ItemGroup>
 		<PackageReference Include="Tsinswreng.CsTreeTest" Version="0.1.1-alpha" />
 	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Tsinswreng.Avln.Dsl\Tsinswreng.Avln.Dsl.csproj" />
+	</ItemGroup>
 </Project>

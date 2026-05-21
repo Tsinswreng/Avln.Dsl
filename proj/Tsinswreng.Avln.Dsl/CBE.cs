@@ -117,9 +117,19 @@ public ClrPropertyInfo(
 			var clrProp = new ClrPropertyInfo(
 				propInfo.Name,
 				obj => {
-					return propInfo.GetValue(obj);
+					var runtimeProp = ResolveRuntimePropertyInfo(obj, propInfo);
+					if(runtimeProp is null){
+						return BindingNotification.UnsetValue;
+					}
+					return runtimeProp.GetValue(obj);
 				},
-				(obj, val) => propInfo.SetValue(obj, val),
+				(obj, val) => {
+					var runtimeProp = ResolveRuntimePropertyInfo(obj, propInfo);
+					if(runtimeProp is null){
+						return;
+					}
+					runtimeProp.SetValue(obj, val);
+				},
 				propInfo.PropertyType
 			);
 			builder.Property(clrProp, PropertyInfoAccessorFactory.CreateInpcPropertyAccessor);
@@ -146,5 +156,24 @@ var clrProp = new ClrPropertyInfo(
 
 
 """;
+	}
+
+	/// Avalonia 內部在 DataContext 切換/探測過程中，可能會拿同一路徑訪問器去碰不同運行時類型的對象。
+	/// 若聲明期拿到的 PropertyInfo 與當前 obj 的運行時類型不兼容，則按同名屬性回退到運行時類型解析。
+	private static PropertyInfo? ResolveRuntimePropertyInfo(object obj, PropertyInfo propInfo){
+		if(propInfo.DeclaringType?.IsInstanceOfType(obj) == true){
+			return propInfo;
+		}
+
+		var runtimeType = obj.GetType();
+		var runtimeProp = runtimeType.GetProperty(
+			propInfo.Name,
+			BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy
+		);
+		if(runtimeProp is not null){
+			return runtimeProp;
+		}
+
+		return null;
 	}
 }
