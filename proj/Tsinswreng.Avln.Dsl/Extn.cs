@@ -79,6 +79,7 @@ public static class Extn{
 		));
 	}
 	
+
 	//下ʹ方法 須 手動傳兩泛型參數、不便也
 	// public static BindingExpressionBase CBind<TCtrl, TTar>
 	// (
