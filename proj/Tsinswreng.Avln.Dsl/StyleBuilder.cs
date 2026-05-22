@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Avalonia;
 using Avalonia.Controls;
@@ -8,7 +9,10 @@ using Avalonia.Media;
 using Avalonia.Styling;
 namespace Tsinswreng.Avln.Dsl;
 public static class Sty{
-	public static StyleBuilder<TCtrl> Is<TCtrl>(
+	public static StyleBuilder<TCtrl> Is<
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+		TCtrl
+	>(
 		Func<Selector, Selector>? selector = null
 	)
 		where TCtrl : StyledElement
@@ -16,7 +20,10 @@ public static class Sty{
 		return new StyleBuilder<TCtrl>(x=>ApplySelector(selector, x.Is<TCtrl>()));
 	}
 
-	public static StyleBuilder<TCtrl> OfType<TCtrl>(
+	public static StyleBuilder<TCtrl> OfType<
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+		TCtrl
+	>(
 		Func<Selector, Selector>? selector = null
 	)
 		where TCtrl : StyledElement
@@ -33,11 +40,14 @@ public static class Sty{
 }
 
 
-public class StyleBuilder<TCtrl>
+public class StyleBuilder<
+	[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+	TCtrl
+>
 	: Style
 	where TCtrl : StyledElement
 {
-	public StyleBuilder(Func<Selector, Selector> selector)
+	public StyleBuilder(Func<Selector?, Selector> selector)
 		: base(selector)
 	{
 	}
@@ -47,7 +57,9 @@ public class StyleBuilder<TCtrl>
 	}
 
 
-	public StyleBuilder<TCtrl> Set<T>(
+	public StyleBuilder<TCtrl> Set<
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] T
+	>(
 		Expression<Func<TCtrl, T?>> ScltProp, T? V
 	){
 		Expression body = ScltProp.Body;
@@ -55,7 +67,7 @@ public class StyleBuilder<TCtrl>
 			body = Expression.Convert(body, typeof(object));
 		}
 		var scltObj = Expression.Lambda<Func<TCtrl, object?>>(body, ScltProp.Parameters);
-		var prop = Tsinswreng.Avln.Dsl.Extn.Prop<TCtrl>(null, scltObj);
+		var prop = Extn.Prop<TCtrl>(null, scltObj);
 		Setters.Add(new Setter(prop, V));
 		return this;
 	}
