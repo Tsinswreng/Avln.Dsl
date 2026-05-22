@@ -19,13 +19,13 @@ namespace Tsinswreng.Avln.Dsl;
 using Controls = global::Avalonia.Controls.Controls;
 using NonGenericList = System.Collections.IList;
 public static class Extn{
-	extension<T>(ref T z)
-		where T:struct
-	{
-		public void Set(T o){
-			z = o;
-		}
-	}
+	// extension<T>(ref T z)
+	// 	where T:struct
+	// {
+	// 	public void Set(T o){
+	// 		z = o;
+	// 	}
+	// }
 	
 	[Doc(@$"
 	var t = new TextBlock();
@@ -34,7 +34,7 @@ public static class Extn{
 	public static AvaloniaProperty Prop<
 		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] T
 	>(
-		this T z, Expression<Func<T, object?>> PropertySelector
+		this T? z, Expression<Func<T, object?>> PropertySelector
 	)where T:AvaloniaObject
 	{
 		var Expr = UnwrapPropertySelector(PropertySelector.Body);
