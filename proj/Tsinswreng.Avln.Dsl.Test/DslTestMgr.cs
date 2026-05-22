@@ -5,6 +5,7 @@ using Tsinswreng.Avln.Dsl.Test.FnConvtrTests;
 using Tsinswreng.Avln.Dsl.Test.IViewModelTests;
 using Tsinswreng.Avln.Dsl.Test.IViewTests;
 using Tsinswreng.Avln.Dsl.Test.PsdClsTests;
+using Tsinswreng.Avln.Dsl.Test.StyleBuilderTests;
 using Tsinswreng.CsTreeTest;
 
 namespace Tsinswreng.Avln.Dsl.Test;
@@ -24,6 +25,7 @@ public class DslTestMgr: DiEtTestMgr{
 		this.RegisterTester<TestIView>();
 		this.RegisterTester<TestIViewModel>();
 		this.RegisterTester<TestPsdCls>();
+		this.RegisterTester<TestStyleBuilder>();
 		return Node;
 	}
 }

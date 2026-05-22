@@ -126,6 +126,7 @@ public static class Extn{
 		return z;
 	}
 
+	[Obsolete]
 	public static Style AddTo(
 		this Style z
 		,Styles Styles

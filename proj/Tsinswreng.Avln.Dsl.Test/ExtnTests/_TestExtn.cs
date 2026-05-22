@@ -8,7 +8,6 @@ public partial class TestExtn: ITester{
 		Node ??= new TestNode();
 		Node.Ordered = false;
 		Node.IsParallelRecursive = false;
-		RegisterStructSet(Node);
 		RegisterProp(Node);
 		RegisterCollectionAdds(Node);
 		RegisterContentAndStyle(Node);

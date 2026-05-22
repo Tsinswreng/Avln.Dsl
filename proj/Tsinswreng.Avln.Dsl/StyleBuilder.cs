@@ -57,7 +57,7 @@ public class StyleBuilder<
 		return this;
 	}
 
-	AvaloniaProperty Prop<T>(Expression<Func<TCtrl, T?>> ScltProp){
+	internal AvaloniaProperty Prop<T>(Expression<Func<TCtrl, T?>> ScltProp){
 		Expression body = ScltProp.Body;
 		if(body.Type.IsValueType){
 			body = Expression.Convert(body, typeof(object));
