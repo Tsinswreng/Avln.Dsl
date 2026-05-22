@@ -126,17 +126,6 @@ public static class Extn{
 		return z;
 	}
 
-	[Obsolete]
-	public static Style AddTo(
-		this Style z
-		,Styles Styles
-		,Action<Style>? FnInit = null
-	){
-		FnInit?.Invoke(z);
-		Styles.Add(z);
-		return z;
-	}
-
 	public static ICollection<IStyle> A<TItem>(
 		this ICollection<IStyle> z
 		,TItem Child

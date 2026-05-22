@@ -1,6 +1,26 @@
 #import "@preview/tsinswreng-auto-heading:0.1.0": auto-heading
 #let H = auto-heading;
 
+#H[v0.3.0-alpha][
+	
+	#H[➕增StyleBuilder][
+		[2026-05-22T19:13:18.570+08:00_W21-5]
+	]
+	
+	#H[❌除廢API][
+		[2026-05-22T19:13:18.570+08:00_W21-5]
+		- #[
+		刪
+		```cs
+		Extn.AddTo(this Style z,Styles Styles,Action<Style>? FnInit = null)
+		```
+		]
+		
+		- #[
+		刪未用之`Extn.Set` 芝蔿結構體者
+		]
+	]
+]
 
 #H[v0.2.0-alpha][
 	#H[🐛Prop與CBE除蠹][
