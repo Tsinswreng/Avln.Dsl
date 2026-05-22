@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
+using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
@@ -56,19 +57,32 @@ public class StyleBuilder<
 		return this;
 	}
 
-
-	public StyleBuilder<TCtrl> Set<
-		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] T
-	>(
-		Expression<Func<TCtrl, T?>> ScltProp, T? V
-	){
+	AvaloniaProperty Prop<T>(Expression<Func<TCtrl, T?>> ScltProp){
 		Expression body = ScltProp.Body;
 		if(body.Type.IsValueType){
 			body = Expression.Convert(body, typeof(object));
 		}
 		var scltObj = Expression.Lambda<Func<TCtrl, object?>>(body, ScltProp.Parameters);
 		var prop = Extn.Prop<TCtrl>(null, scltObj);
+		return prop;
+	}
+
+	public StyleBuilder<TCtrl> Set<
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] T
+	>(
+		Expression<Func<TCtrl, T?>> ScltProp, T? V
+	){
+		var prop = Prop(ScltProp);
 		Setters.Add(new Setter(prop, V));
+		return this;
+	}
+	public StyleBuilder<TCtrl> Set<
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] T
+	>(
+		Expression<Func<TCtrl, T?>> ScltProp, BindingBase Binding
+	){
+		var prop = Prop(ScltProp);
+		Setters.Add(new Setter(prop, Binding));
 		return this;
 	}
 }
