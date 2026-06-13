@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Reflection;
 using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
@@ -17,19 +19,62 @@ namespace Tsinswreng.Avln.Dsl;
 using Controls = global::Avalonia.Controls.Controls;
 using NonGenericList = System.Collections.IList;
 public static class Extn{
-	public static RowDefinition RowDef(double value, GridUnitType type){
-		return new RowDefinition(value, type);
-	}
-	public static ColumnDefinition ColDef(double value, GridUnitType type){
-		return new ColumnDefinition(value, type);
+	// extension<T>(ref T z)
+	// 	where T:struct
+	// {
+	// 	public void Set(T o){
+	// 		z = o;
+	// 	}
+	// }
+
+	[Doc(@$"
+	var t = new TextBlock();
+	t.Prop(x=>x.Text) -> TextBlock.TextProperty
+	")]
+	public static AvaloniaProperty Prop<
+		[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] T
+	>(
+		this T? z, Expression<Func<T, object?>> PropertySelector
+	)where T:AvaloniaObject
+	{
+		var Expr = UnwrapPropertySelector(PropertySelector.Body);
+		if(Expr is not MemberExpression m
+			|| m.Member is not PropertyInfo p
+		){
+			throw new ArgumentException("PropertySelector must be a property selector expression.");
+		}
+		var StaticName = p.Name+"Property";
+		FieldInfo? AvlnPropField = null;
+		for(var CurType = typeof(T); CurType is not null; CurType = CurType.BaseType){
+			AvlnPropField = CurType.GetField(
+				StaticName,
+				BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy
+			);
+			if(AvlnPropField is not null){
+				break;
+			}
+		}
+		if(AvlnPropField is null){
+			throw new InvalidOperationException(
+				$"Avalonia property field '{StaticName}' was not found on type '{typeof(T)}' or its base types."
+			);
+		}
+		return (AvaloniaProperty)AvlnPropField.GetValue(null)!;
 	}
 
-	extension<T>(ref T z)
-		where T:struct
-	{
-		public void Set(T o){
-			z = o;
+	/// `Expression<Func<T, object?>>` 在值類型/可空值類型屬性上常帶一層裝箱轉換。
+	/// 這裏先剝掉外層轉換，再按成員訪問解析 AvaloniaProperty。
+	static Expression UnwrapPropertySelector(Expression Expr){
+		while(Expr is UnaryExpression u
+			&& (
+				u.NodeType == ExpressionType.Convert
+				|| u.NodeType == ExpressionType.ConvertChecked
+				|| u.NodeType == ExpressionType.TypeAs
+			)
+		){
+			Expr = u.Operand;
 		}
+		return Expr;
 	}
 
 	public static BindingExpressionBase CBind<TTar>
@@ -49,6 +94,7 @@ public static class Extn{
 			TargetPropSlctr, Mode, Converter, ConverterParameter, Path, Source, DataType
 		));
 	}
+
 
 	//下ʹ方法 須 手動傳兩泛型參數、不便也
 	// public static BindingExpressionBase CBind<TCtrl, TTar>
@@ -77,16 +123,6 @@ public static class Extn{
 	){
 		z.Add(Child!);
 		FnInit?.Invoke(Child);
-		return z;
-	}
-
-	public static Style AddTo(
-		this Style z
-		,Styles Styles
-		,Action<Style>? FnInit = null
-	){
-		FnInit?.Invoke(z);
-		Styles.Add(z);
 		return z;
 	}
 
@@ -276,6 +312,23 @@ public static class Extn{
 		// }
 	}
 
+	extension<TSelf>(TSelf z)
+		where TSelf : Grid
+	{
+		public TSelf SetRowDefs(
+			params IEnumerable<RowDefinition> RowDefs
+		){
+			z.RowDefinitions = [..RowDefs];
+			return z;
+		}
+
+		public TSelf SetColDefs(
+			params IEnumerable<ColumnDefinition> ColDefs
+		){
+			z.ColumnDefinitions= [..ColDefs];
+			return z;
+		}
+	}
 
 }
 

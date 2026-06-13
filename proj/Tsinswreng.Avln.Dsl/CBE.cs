@@ -1,11 +1,13 @@
 //2025-03-09T21:11:06.192+08:00_W10-7
 using System;
 using System.Linq.Expressions;
+using System.Reflection;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Data.Core;
 using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings;
+using Tsinswreng.CsCore;
 namespace Tsinswreng.Avln.Dsl;
 
 
@@ -49,23 +51,34 @@ public partial class CBE{
 		return r;
 	}
 
-	public static CompiledBindingPath Pth<T, Tar>(
-		Expression<Func<T, Tar>> propertySelector
+
+[Doc(@$"
+從表達式樹構建編譯綁定路徑，
+支持屬性訪問（如 x=>x.Property）
+和直接對象綁定（如 x=>x）
+- {nameof(TArg)} 表示數據上下文類型
+- {nameof(TRtn)} 表示表達式返回值類型
+")]
+public static CompiledBindingPath Pth<TArg, TRtn>(
+		Expression<Func<TArg, TRtn>> propertySelector
 	){
 		var builder = new CompiledBindingPathBuilder();
 		var body = propertySelector.Body;
 
-		// 处理类型转换表达式（如值类型装箱）
+		// 處理類型轉換表達式（如值類型裝箱）
+		// 如 CBE.Pth<MyDataContext, object?>(ctx => ctx.SomeIntProperty)
+		// 编译器生成的表达式树实际上类似于：
+		// Convert( MemberExpression(ctx.SomeIntProperty) )
 		if (body is UnaryExpression { NodeType: ExpressionType.Convert } unaryExpr){
 			body = unaryExpr.Operand;
 		}
 
 		switch (body){
-			case MemberExpression memberExpr:  // 属性访问模式
-				ProcessMemberExpression<T>(builder, memberExpr);
+			case MemberExpression memberExpr:  // 屬性訪問模式 x=>x.Prop
+				ProcessMemberExpression<TArg>(builder, memberExpr);
 				break;
-			case ParameterExpression paramExpr:  // 直接对象绑定模式
-				ValidateObjectBinding(typeof(T), typeof(Tar));
+			case ParameterExpression paramExpr:  // 直接對象綁定模式 x=>x
+				ValidateObjectBinding(typeof(TArg), typeof(TRtn));
 				break;
 			default:
 				throw new ArgumentException("The expression must be a property access or object binding.");
@@ -74,27 +87,95 @@ public partial class CBE{
 		return builder.Build();
 	}
 
-	private static void ValidateObjectBinding(Type sourceType, Type targetType){
-		if (!targetType.IsAssignableFrom(sourceType)){
-			//throw new InvalidOperationException($"类型不兼容：{sourceType}无法转换为{targetType}");
-			throw new InvalidOperationException($"Type mismatch: {sourceType} cannot be assigned to {targetType}");
-		}
+// 驗證來源類型是否可賦值給目標類型
+// 用於直接對象綁定時的類型相容性檢查
+private static void ValidateObjectBinding(Type sourceType, Type targetType){
+	if (!targetType.IsAssignableFrom(sourceType)){
+		//throw new InvalidOperationException($"类型不兼容：{sourceType}无法转换为{targetType}");
+		throw new InvalidOperationException($"Type mismatch: {sourceType} cannot be assigned to {targetType}");
 	}
+}
 
-	private static void ProcessMemberExpression<T>(
+// 處理成員表達式（屬性訪問），將屬性添加到編譯綁定路徑構建器中
+// 使用反射建立 ClrPropertyInfo 並添加到路徑
+	private static void ProcessMemberExpression<TArg>(
 		CompiledBindingPathBuilder builder
-		,MemberExpression expr
+		,MemberExpression expr // expr：表达式树中代表属性访问的节点，例如 ctx => ctx.UserName 中的 ctx.UserName。
 	){
 		var propName = expr.Member.Name;
 		var propType = expr.Type;
 
-		var clrProp = new ClrPropertyInfo(
-			propName,
-			obj => ((T)obj).GetType().GetProperty(propName)?.GetValue(obj),
-			(obj, val) => ((T)obj).GetType().GetProperty(propName)?.SetValue(obj, val),
-			propType
-		);
+		//ClrPropertyInfo是Avalonia的API、非 .NET 标准库中的通用类型。
+		_ = """
+public ClrPropertyInfo(
+	string name
+	,Func<object, object?>? getter
+	,Action<object, object?>? setter
+	,Type propertyType
+)
+""";
 
-		builder.Property(clrProp, PropertyInfoAccessorFactory.CreateInpcPropertyAccessor);
+		if (expr.Member is PropertyInfo propInfo){
+			var clrProp = new ClrPropertyInfo(
+				propInfo.Name,
+				obj => {
+					var runtimeProp = ResolveRuntimePropertyInfo(obj, propInfo);
+					if(runtimeProp is null){
+						return BindingNotification.UnsetValue;
+					}
+					return runtimeProp.GetValue(obj);
+				},
+				(obj, val) => {
+					var runtimeProp = ResolveRuntimePropertyInfo(obj, propInfo);
+					if(runtimeProp is null){
+						return;
+					}
+					runtimeProp.SetValue(obj, val);
+				},
+				propInfo.PropertyType
+			);
+			builder.Property(clrProp, PropertyInfoAccessorFactory.CreateInpcPropertyAccessor);
+		}
+		_ = """
+propInfo 对象本身是从表达式树中的 MemberExpression.Member 
+直接拿到的 PropertyInfo 实例。
+AOT 编译器会看到你的代码中
+直接引用了这个 PropertyInfo（例如赋给了 clrProp 变量），
+因此会保留该属性的所有元数据和访问器方法，
+确保 GetValue/SetValue 调用时不会因为剪裁而丢失。
+
+相比之下，原来的 GetProperty(propName) 是字符串反射，
+AOT 编译器无法知道 propName 具体指哪个属性，
+所以会报警告 IL2075
+
+舊寫法:
+var clrProp = new ClrPropertyInfo(
+	propName,
+	obj => ((TArg)obj).GetType().GetProperty(propName)?.GetValue(obj),
+	(obj, val) => ((TArg)obj).GetType().GetProperty(propName)?.SetValue(obj, val),
+	propType
+);
+
+
+""";
+	}
+
+	/// Avalonia 內部在 DataContext 切換/探測過程中，可能會拿同一路徑訪問器去碰不同運行時類型的對象。
+	/// 若聲明期拿到的 PropertyInfo 與當前 obj 的運行時類型不兼容，則按同名屬性回退到運行時類型解析。
+	private static PropertyInfo? ResolveRuntimePropertyInfo(object obj, PropertyInfo propInfo){
+		if(propInfo.DeclaringType?.IsInstanceOfType(obj) == true){
+			return propInfo;
+		}
+
+		var runtimeType = obj.GetType();
+		var runtimeProp = runtimeType.GetProperty(
+			propInfo.Name,
+			BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy
+		);
+		if(runtimeProp is not null){
+			return runtimeProp;
+		}
+
+		return null;
 	}
 }
