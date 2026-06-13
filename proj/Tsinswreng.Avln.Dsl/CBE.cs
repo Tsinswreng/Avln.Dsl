@@ -16,8 +16,9 @@ namespace Tsinswreng.Avln.Dsl;
 //,CBE.Mk<Ctx>(x=>x.hasValue)
 //RelativeBinging直用new Binging即可 不必用此
 
-public partial class CBE : CompiledBindingExtension{
-	public CBE(CompiledBindingPath path):base(path){}
+public partial class CBE{
+	//public CBE(CompiledBindingPath path):base(path){}
+
 
 	public static CompiledBindingPath Pth<T>(
 		Expression<Func<T, object?>> propertySelector
@@ -38,7 +39,7 @@ public partial class CBE : CompiledBindingExtension{
 		,object? Source = default
 		,Type? DataType = default
 	){
-		var r = new CBE(Pth<T, object?>(PropertySelector)){};
+		var r = new CompiledBindingExtension(Pth<T, object?>(PropertySelector)){};
 		r.Mode = Mode;
 		r.Converter = Converter;
 		r.ConverterParameter = ConverterParameter;
