@@ -31,7 +31,7 @@ public static class Extn{
 			z = o;
 		}
 	}
-	
+
 	public static BindingExpressionBase CBind<TTar>
 	(
 		this AvaloniaObject z, AvaloniaProperty AvlnProp
@@ -99,7 +99,7 @@ public static class Extn{
 		FnInit?.Invoke(Child);
 		return z;
 	}
-	
+
 	public static ICollection<Control> A<TItem>(
 		this ICollection<Control> z
 		,TItem Child
@@ -109,7 +109,7 @@ public static class Extn{
 		FnInit?.Invoke(Child);
 		return z;
 	}
-	
+
 	[Doc(@$"for .Children.A()")]
 	public static Controls A<TChild>(
 		this Controls z
@@ -149,7 +149,7 @@ public static class Extn{
 		FnInit?.Invoke(ControlAsContent);
 		return ControlAsContent;
 	}
-	
+
 	public class ClsHorizontalAlignment{
 		public static ClsHorizontalAlignment Inst = new();
 		public HorizontalAlignment Stretch=>HorizontalAlignment.Stretch;
@@ -157,7 +157,7 @@ public static class Extn{
 		public HorizontalAlignment Center=>HorizontalAlignment.Center;
 		public HorizontalAlignment Right=>HorizontalAlignment.Right;
 	}
-	
+
 	public static TSelf HAlign<TSelf>(
 		this TSelf z
 		,HorizontalAlignment v
@@ -177,7 +177,7 @@ public static class Extn{
 		z.HorizontalAlignment = Fn(ClsHorizontalAlignment.Inst);
 		return z;
 	}
-	
+
 	public static TSelf HCAlign<TSelf>(
 		this TSelf z
 		,HorizontalAlignment v
@@ -197,7 +197,7 @@ public static class Extn{
 		z.HorizontalContentAlignment = Fn(ClsHorizontalAlignment.Inst);
 		return z;
 	}
-	
+
 
 	public class ClsVerticalAlignment{
 		public static ClsVerticalAlignment Inst = new();
@@ -215,7 +215,7 @@ public static class Extn{
 		z.VerticalAlignment = v;
 		return z;
 	}
-	
+
 	public static TSelf VAlign<TSelf>(
 		this TSelf z
 		,Func<ClsVerticalAlignment, VerticalAlignment> Fn
@@ -225,7 +225,7 @@ public static class Extn{
 		z.VerticalAlignment = Fn(ClsVerticalAlignment.Inst);
 		return z;
 	}
-	
+
 	public static TSelf VCAlign<TSelf>(
 		this TSelf z
 		,VerticalAlignment v
@@ -235,7 +235,7 @@ public static class Extn{
 		z.VerticalContentAlignment = v;
 		return z;
 	}
-	
+
 	public static TSelf VCAlign<TSelf>(
 		this TSelf z
 		,Func<ClsVerticalAlignment, VerticalAlignment> Fn
@@ -261,7 +261,7 @@ public static class Extn{
 			set{value(z);}
 		}
 
-		public (AvaloniaProperty property, IBinding binding) Bind{
+		public (AvaloniaProperty property, BindingBase binding) Bind{
 			set{
 				z.Bind(value.property,value.binding);
 			}
@@ -275,7 +275,7 @@ public static class Extn{
 		// 	set=>z.VerticalAlignment = value;
 		// }
 	}
-	
+
 
 }
 
